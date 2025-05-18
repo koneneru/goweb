@@ -1,2 +1,2 @@
 # goweb
-Code following along the book Let's Go Further by Alex Edwrads
+Code following along the book Let's Go Further by Alex Edwards
