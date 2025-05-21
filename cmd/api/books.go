@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 )
 
 func (app *application) createBookHandler(w http.ResponseWriter, r *http.Request) {
@@ -11,9 +10,7 @@ func (app *application) createBookHandler(w http.ResponseWriter, r *http.Request
 }
 
 func (app *application) showBookHandler(w http.ResponseWriter, r *http.Request) {
-	param := r.PathValue("id")
-
-	id, err := strconv.ParseInt(param, 10, 64)
+	id, err := app.readIDParam(r)
 	if err != nil {
 		http.NotFound(w, r)
 		return
