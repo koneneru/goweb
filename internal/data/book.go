@@ -4,11 +4,11 @@ import "time"
 
 type Book struct {
 	ID        int64     `json:"id"`
-	CreatedAt time.Time `json:"created_at"`
+	CreatedAt time.Time `json:"-"`
 	Title     string    `json:"title"`
 	Author    string    `json:"author"`
-	Year      int32     `json:"year"`
-	Size      int32     `json:"size"`
-	Genres    []string  `json:"genres"`
+	Year      int32     `json:"year,omitempty"`
+	Size      int32     `json:"size,omitempty"`
+	Genres    []string  `json:"genres,omitempty"`
 	Version   int32     `json:"version"`
 }
