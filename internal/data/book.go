@@ -8,7 +8,7 @@ type Book struct {
 	Title     string    `json:"title"`
 	Author    string    `json:"author"`
 	Year      int32     `json:"year,omitempty"`
-	Size      int32     `json:"size,omitempty"`
+	Size      Booksize  `json:"size,omitempty"`
 	Genres    []string  `json:"genres,omitempty"`
 	Version   int32     `json:"version"`
 }
