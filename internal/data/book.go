@@ -1,6 +1,7 @@
 package data
 
 import (
+	"database/sql"
 	"goweb/internal/validator"
 	"time"
 )
@@ -34,4 +35,24 @@ func ValidateBook(v *validator.Validator, book *Book) {
 	v.Check(len(book.Genres) >= 1, "genres", "must contain at least 1 genre")
 	v.Check(len(book.Genres) <= 5, "genres", "must not contain more than 5 genres")
 	v.Check(validator.Unique(book.Genres), "genres", "must not contain duplicate values")
+}
+
+type BookModel struct {
+	DB *sql.DB
+}
+
+func (m BookModel) Insert(b *Book) error {
+	return nil
+}
+
+func (m BookModel) Get(id int64) (*Book, error) {
+	return nil, nil
+}
+
+func (m BookModel) Update(b *Book) error {
+	return nil
+}
+
+func (m BookModel) Delete(id int64) error {
+	return nil
 }
