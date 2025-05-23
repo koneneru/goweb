@@ -37,7 +37,19 @@ func (app *application) createBookHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	fmt.Fprintf(w, "%+v\n", input)
+	err = app.models.Books.Insert(book)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	header := make(http.Header)
+	header.Set("Location", fmt.Sprintf("/v1/books/%d", book.ID))
+
+	err = app.writeJSON(w, http.StatusCreated, envelope{"book": book}, header)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
 }
 
 func (app *application) showBookHandler(w http.ResponseWriter, r *http.Request) {
