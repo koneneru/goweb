@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"goweb/internal/validator"
 	"time"
+
+	"github.com/lib/pq"
 )
 
 type Book struct {
@@ -42,7 +44,14 @@ type BookModel struct {
 }
 
 func (m BookModel) Insert(b *Book) error {
-	return nil
+	query := `
+		INSERT INTO books (title, author, year, size, genres)
+		VALUES ($1, $2, $3, $4, $5)
+		RETURNING id, created_at, version`
+
+	args := []any{b.Title, b.Author, b.Year, b.Size, pq.Array(b.Genres)}
+
+	return m.DB.QueryRow(query, args...).Scan(&b.ID, &b.CreatedAt, &b.Version)
 }
 
 func (m BookModel) Get(id int64) (*Book, error) {
