@@ -2,6 +2,7 @@ package data
 
 import (
 	"database/sql"
+	"errors"
 	"goweb/internal/validator"
 	"time"
 
@@ -55,7 +56,37 @@ func (m BookModel) Insert(b *Book) error {
 }
 
 func (m BookModel) Get(id int64) (*Book, error) {
-	return nil, nil
+	if id < 1 {
+		return nil, ErrRecordNotFound
+	}
+
+	query := `
+		SELECT id, created_at, title, author, year, size, genres, version
+		FROM books
+		WHERE id=$1`
+
+	var book Book
+	err := m.DB.QueryRow(query, id).Scan(
+		&book.ID,
+		&book.CreatedAt,
+		&book.Title,
+		&book.Author,
+		&book.Year,
+		&book.Size,
+		pq.Array(&book.Genres),
+		&book.Version,
+	)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+
+		default:
+			return nil, err
+		}
+	}
+
+	return &book, nil
 }
 
 func (m BookModel) Update(b *Book) error {
