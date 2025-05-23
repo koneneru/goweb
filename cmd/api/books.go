@@ -1,11 +1,11 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"goweb/internal/data"
 	"goweb/internal/validator"
 	"net/http"
-	"time"
 )
 
 func (app *application) createBookHandler(w http.ResponseWriter, r *http.Request) {
@@ -59,14 +59,16 @@ func (app *application) showBookHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	book := data.Book{
-		ID:        id,
-		CreatedAt: time.Now(),
-		Title:     "Spice and Wolf vol.1",
-		Author:    "Isuna Hasekura",
-		Size:      289,
-		Genres:    []string{"adventure", "drama", "fantasy", "romance", "supernatural"},
-		Version:   1,
+	book, err := app.models.Books.Get(id)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(w, r)
+
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
 	}
 
 	err = app.writeJSON(w, http.StatusOK, envelope{"book": book}, nil)
