@@ -101,12 +101,15 @@ func (m BookModel) GetAll(title, author string, genres []string, filters Filters
 	query := `
 		SELECT id,created_at,title,author,year,size,genres,version
 		FROM books
+		WHERE (LOWER(title)=LOWER($1) OR $1='')
+		AND (LOWER(author)=LOWER($2) OR $2='')
+		AND (genres @> $3 OR $3='{}')
 		ORDER BY id`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	rows, err := m.DB.QueryContext(ctx, query)
+	rows, err := m.DB.QueryContext(ctx, query, title, author, pq.Array(genres))
 	if err != nil {
 		return nil, err
 	}
