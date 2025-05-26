@@ -176,3 +176,32 @@ func (app *application) deleteBookHandler(w http.ResponseWriter, r *http.Request
 		app.serverErrorResponse(w, r, err)
 	}
 }
+
+func (app *application) listBooksHandler(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		Title    string
+		Author   string
+		Genres   []string
+		Page     int
+		PageSize int
+		Sort     string
+	}
+
+	v := validator.New()
+
+	qs := r.URL.Query()
+
+	input.Title = app.readString(qs, "title", "")
+	input.Author = app.readString(qs, "author", "")
+	input.Genres = app.readCSV(qs, "genres", []string{})
+	input.Page = app.readInt(qs, "page", 1, v)
+	input.PageSize = app.readInt(qs, "page_size", 20, v)
+	input.Sort = app.readString(qs, "sort", "id")
+
+	if !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+
+	fmt.Fprintf(w, "%+v\n", input)
+}
