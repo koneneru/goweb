@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"goweb/internal/validator"
 	"time"
 
@@ -98,13 +99,13 @@ func (m BookModel) Get(id int64) (*Book, error) {
 }
 
 func (m BookModel) GetAll(title, author string, genres []string, filters Filters) ([]*Book, error) {
-	query := `
+	query := fmt.Sprintf(`
 		SELECT id,created_at,title,author,year,size,genres,version
 		FROM books
 		WHERE (to_tsvector('simple', title) @@ plainto_tsquery('simple', $1) OR $1='')
 		AND (LOWER(author)=LOWER($2) OR $2='')
 		AND (genres @> $3 OR $3='{}')
-		ORDER BY id`
+		ORDER BY %s %s, id ASC`, filters.sortColumn(), filters.sortDirection())
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
