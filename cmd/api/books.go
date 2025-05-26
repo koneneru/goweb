@@ -76,3 +76,61 @@ func (app *application) showBookHandler(w http.ResponseWriter, r *http.Request) 
 		app.serverErrorResponse(w, r, err)
 	}
 }
+
+func (app *application) updateBookHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := app.readIDParam(r)
+	if err != nil {
+		app.notFoundResponse(w, r)
+		return
+	}
+
+	book, err := app.models.Books.Get(id)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(w, r)
+
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	var input struct {
+		Title  string        `json:"title"`
+		Author string        `json:"author"`
+		Year   int32         `json:"year"`
+		Size   data.Booksize `json:"size"`
+		Genres []string      `json:"genres"`
+	}
+
+	err = app.readJSON(w, r, &input)
+	if err != nil {
+		app.badReqestResponse(w, r, err)
+		return
+	}
+
+	book.Title = input.Title
+	book.Author = input.Author
+	book.Year = input.Year
+	book.Size = input.Size
+	book.Genres = input.Genres
+
+	v := validator.New()
+
+	if data.ValidateBook(v, book); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+
+	err = app.models.Books.Update(book)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"book": book}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
