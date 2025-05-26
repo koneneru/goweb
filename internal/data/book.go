@@ -97,6 +97,50 @@ func (m BookModel) Get(id int64) (*Book, error) {
 	return &book, nil
 }
 
+func (m BookModel) GetAll(title, author string, genres []string, filters Filters) ([]*Book, error) {
+	query := `
+		SELECT id,created_at,title,author,year,size,genres,version
+		FROM books
+		ORDER BY id`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	rows, err := m.DB.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	books := []*Book{}
+
+	for rows.Next() {
+		var book Book
+
+		err := rows.Scan(
+			&book.ID,
+			&book.CreatedAt,
+			&book.Title,
+			&book.Author,
+			&book.Year,
+			&book.Size,
+			pq.Array(&book.Genres),
+			&book.Version,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		books = append(books, &book)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return books, nil
+}
+
 func (m BookModel) Update(b *Book) error {
 	query := `
 		UPDATE books
