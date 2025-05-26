@@ -98,9 +98,9 @@ func (m BookModel) Get(id int64) (*Book, error) {
 	return &book, nil
 }
 
-func (m BookModel) GetAll(title, author string, genres []string, filters Filters) ([]*Book, error) {
+func (m BookModel) GetAll(title, author string, genres []string, filters Filters) ([]*Book, Metadata, error) {
 	query := fmt.Sprintf(`
-		SELECT id,created_at,title,author,year,size,genres,version
+		SELECT count(*) OVER() ,id,created_at,title,author,year,size,genres,version
 		FROM books
 		WHERE (to_tsvector('simple', title) @@ plainto_tsquery('simple', $1) OR $1='')
 		AND (LOWER(author)=LOWER($2) OR $2='')
@@ -115,16 +115,18 @@ func (m BookModel) GetAll(title, author string, genres []string, filters Filters
 
 	rows, err := m.DB.QueryContext(ctx, query, args...)
 	if err != nil {
-		return nil, err
+		return nil, Metadata{}, err
 	}
 	defer rows.Close()
 
+	totalRecords := 0
 	books := []*Book{}
 
 	for rows.Next() {
 		var book Book
 
 		err := rows.Scan(
+			&totalRecords,
 			&book.ID,
 			&book.CreatedAt,
 			&book.Title,
@@ -135,17 +137,19 @@ func (m BookModel) GetAll(title, author string, genres []string, filters Filters
 			&book.Version,
 		)
 		if err != nil {
-			return nil, err
+			return nil, Metadata{}, err
 		}
 
 		books = append(books, &book)
 	}
 
 	if err = rows.Err(); err != nil {
-		return nil, err
+		return nil, Metadata{}, err
 	}
 
-	return books, nil
+	metadata := calculateMetadata(totalRecords, filters.Page, filters.PageSize)
+
+	return books, metadata, nil
 }
 
 func (m BookModel) Update(b *Book) error {
