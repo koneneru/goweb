@@ -105,12 +105,15 @@ func (m BookModel) GetAll(title, author string, genres []string, filters Filters
 		WHERE (to_tsvector('simple', title) @@ plainto_tsquery('simple', $1) OR $1='')
 		AND (LOWER(author)=LOWER($2) OR $2='')
 		AND (genres @> $3 OR $3='{}')
-		ORDER BY %s %s, id ASC`, filters.sortColumn(), filters.sortDirection())
+		ORDER BY %s %s, id ASC
+		LIMIT $4 OFFSET $5`, filters.sortColumn(), filters.sortDirection())
+
+	args := []any{title, author, pq.Array(genres), filters.limit(), filters.offset()}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	rows, err := m.DB.QueryContext(ctx, query, title, author, pq.Array(genres))
+	rows, err := m.DB.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
