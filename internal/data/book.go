@@ -1,6 +1,7 @@
 package data
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"goweb/internal/validator"
@@ -52,7 +53,10 @@ func (m BookModel) Insert(b *Book) error {
 
 	args := []any{b.Title, b.Author, b.Year, b.Size, pq.Array(b.Genres)}
 
-	return m.DB.QueryRow(query, args...).Scan(&b.ID, &b.CreatedAt, &b.Version)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	return m.DB.QueryRowContext(ctx, query, args...).Scan(&b.ID, &b.CreatedAt, &b.Version)
 }
 
 func (m BookModel) Get(id int64) (*Book, error) {
@@ -66,7 +70,11 @@ func (m BookModel) Get(id int64) (*Book, error) {
 		WHERE id=$1`
 
 	var book Book
-	err := m.DB.QueryRow(query, id).Scan(
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := m.DB.QueryRowContext(ctx, query, id).Scan(
 		&book.ID,
 		&book.CreatedAt,
 		&book.Title,
@@ -106,7 +114,10 @@ func (m BookModel) Update(b *Book) error {
 		b.Version,
 	}
 
-	err := m.DB.QueryRow(query, args...).Scan(&b.Version)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := m.DB.QueryRowContext(ctx, query, args...).Scan(&b.Version)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
@@ -125,7 +136,10 @@ func (m BookModel) Delete(id int64) error {
 		DELETE FROM books
 		WHERE id=$1`
 
-	result, err := m.DB.Exec(query, id)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	result, err := m.DB.ExecContext(ctx, query, id)
 	if err != nil {
 		return err
 	}
