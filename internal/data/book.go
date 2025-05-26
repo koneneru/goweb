@@ -101,7 +101,7 @@ func (m BookModel) GetAll(title, author string, genres []string, filters Filters
 	query := `
 		SELECT id,created_at,title,author,year,size,genres,version
 		FROM books
-		WHERE (LOWER(title)=LOWER($1) OR $1='')
+		WHERE (to_tsvector('simple', title) @@ plainto_tsquery('simple', $1) OR $1='')
 		AND (LOWER(author)=LOWER($2) OR $2='')
 		AND (genres @> $3 OR $3='{}')
 		ORDER BY id`
