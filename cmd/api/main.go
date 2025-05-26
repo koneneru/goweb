@@ -6,7 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"goweb/internal/data"
-	"log"
+	"goweb/internal/jsonlog"
 	"net/http"
 	"os"
 	"time"
@@ -29,7 +29,7 @@ type config struct {
 
 type application struct {
 	config config
-	logger *log.Logger
+	logger *jsonlog.Logger
 	models data.Models
 }
 
@@ -45,15 +45,15 @@ func main() {
 	flag.DurationVar(&cfg.db.maxIdleTime, "db-max-idle-time", 15*time.Minute, "PostgreSQL max connection idle time")
 	flag.Parse()
 
-	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
+	logger := jsonlog.New(os.Stdout, jsonlog.Levelinfo)
 
 	db, err := openDB(cfg)
 	if err != nil {
-		logger.Fatal(err)
+		logger.PrintFatal(err, nil)
 	}
 	defer db.Close()
 
-	logger.Printf("database connection pool established")
+	logger.PrintInfo("database connection pool established", nil)
 
 	app := application{
 		config: cfg,
@@ -69,9 +69,11 @@ func main() {
 		WriteTimeout: 30 * time.Second,
 	}
 
-	logger.Printf("starting %s server on %s", cfg.env, srv.Addr)
+	logger.PrintInfo("starting server", map[string]string{
+		"env":  cfg.env,
+		"host": srv.Addr})
 	err = srv.ListenAndServe()
-	logger.Fatal(err)
+	logger.PrintFatal(err, nil)
 }
 
 func openDB(cfg config) (*sql.DB, error) {
