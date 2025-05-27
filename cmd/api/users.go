@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"goweb/internal/data"
 	"goweb/internal/validator"
 	"net/http"
@@ -50,7 +51,17 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	// Launch a background goroutine to send the welcome email
 	go func() {
+		// Run a deferred function which uses recover() to catch any panics, and log an
+		// error message instead of terminating whole application
+		defer func() {
+			if err := recover(); err != nil {
+				app.logger.PrintError(fmt.Errorf("%s", err), nil)
+			}
+		}()
+
+		// Send the welcome email
 		err = app.mailer.Send(user.Email, "user_welcome.tmpl", user)
 		if err != nil {
 			app.logger.PrintError(err, nil)
