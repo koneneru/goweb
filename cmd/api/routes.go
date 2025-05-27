@@ -13,5 +13,7 @@ func (app *application) routes() http.Handler {
 	mux.HandleFunc("PATCH /v1/books/{id}", app.updateBookHandler)
 	mux.HandleFunc("DELETE /v1/books/{id}", app.deleteBookHandler)
 
+	mux.HandleFunc("POST /v1/users", app.registerUserHandler)
+
 	return app.recoverPanic(app.rateLimit(mux))
 }
