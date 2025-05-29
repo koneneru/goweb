@@ -7,11 +7,11 @@ func (app *application) routes() http.Handler {
 
 	mux.HandleFunc("GET /v1/healthcheck", app.healthcheckHandler)
 
-	mux.HandleFunc("GET /v1/books", app.listBooksHandler)
-	mux.HandleFunc("POST /v1/books", app.createBookHandler)
-	mux.HandleFunc("GET /v1/books/{id}", app.showBookHandler)
-	mux.HandleFunc("PATCH /v1/books/{id}", app.updateBookHandler)
-	mux.HandleFunc("DELETE /v1/books/{id}", app.deleteBookHandler)
+	mux.HandleFunc("GET /v1/books", app.requirePermission("books:read", app.listBooksHandler))
+	mux.HandleFunc("POST /v1/books", app.requirePermission("books:write", app.createBookHandler))
+	mux.HandleFunc("GET /v1/books/{id}", app.requirePermission("books:read", app.showBookHandler))
+	mux.HandleFunc("PATCH /v1/books/{id}", app.requirePermission("books:write", app.updateBookHandler))
+	mux.HandleFunc("DELETE /v1/books/{id}", app.requirePermission("books:write", app.deleteBookHandler))
 
 	mux.HandleFunc("POST /v1/users", app.registerUserHandler)
 	mux.HandleFunc("PUT /v1/users/activate", app.activateUserHandler)
