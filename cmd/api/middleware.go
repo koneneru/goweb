@@ -7,6 +7,7 @@ import (
 	"goweb/internal/validator"
 	"net"
 	"net/http"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -160,4 +161,27 @@ func (app *application) requirePermission(code string, next http.HandlerFunc) ht
 		next.ServeHTTP(w, r)
 	}
 	return app.requireActivatedUser(fn)
+}
+
+func (app *application) enableCORS(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Vary", "Origin")
+		w.Header().Add("Vary", "Access-Control-Request-Method")
+
+		origin := r.Header.Get("Origin")
+		if origin != "" && len(app.config.cors.trustedOrigins) != 0 {
+			if slices.Contains(app.config.cors.trustedOrigins, origin) {
+				w.Header().Add("Access-Control-Allow-Origin", origin)
+
+				if r.Method == http.MethodOptions && r.Header.Get("Access-Control-Request-Method") != "" {
+					w.Header().Set("Access-Control-Allow-Methods", "OPTIONS, PUT, PATCH, DELETE")
+					w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
+					w.WriteHeader(http.StatusOK)
+					return
+				}
+			}
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
