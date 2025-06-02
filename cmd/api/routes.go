@@ -23,5 +23,5 @@ func (app *application) routes() http.Handler {
 
 	mux.Handle("GET /debug/vars", expvar.Handler())
 
-	return app.recoverPanic(app.enableCORS(app.rateLimit(app.authenticate(mux))))
+	return app.metrics(app.recoverPanic(app.enableCORS(app.rateLimit(app.authenticate(mux)))))
 }
