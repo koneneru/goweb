@@ -62,7 +62,7 @@ func (app *application) createAuthenticationTokenHandler(w http.ResponseWriter, 
 	}
 }
 
-func (app *application) CreatePasswordResetTokenHandler(w http.ResponseWriter, r *http.Request) {
+func (app *application) createPasswordResetTokenHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		Email string `json:"email"`
 	}
