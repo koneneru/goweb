@@ -89,7 +89,7 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 
 		headerParts := strings.Split(authorizationHeader, " ")
 		if len(headerParts) != 2 || headerParts[0] != "Bearer" {
-			app.invalidAuthorizationTokenResponse(w, r)
+			app.invalidAuthenticationTokenResponse(w, r)
 			return
 		}
 
@@ -97,22 +97,22 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 
 		claims, err := jwt.HMACCheck([]byte(token), []byte(app.config.jwt.secret))
 		if err != nil {
-			app.invalidAuthorizationTokenResponse(w, r)
+			app.invalidAuthenticationTokenResponse(w, r)
 			return
 		}
 
 		if !claims.Valid(time.Now()) {
-			app.invalidAuthorizationTokenResponse(w, r)
+			app.invalidAuthenticationTokenResponse(w, r)
 			return
 		}
 
 		if claims.Issuer != "goweb.com" {
-			app.invalidAuthorizationTokenResponse(w, r)
+			app.invalidAuthenticationTokenResponse(w, r)
 			return
 		}
 
 		if !claims.AcceptAudience("goweb.com") {
-			app.invalidAuthorizationTokenResponse(w, r)
+			app.invalidAuthenticationTokenResponse(w, r)
 			return
 		}
 
@@ -126,7 +126,7 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 		if err != nil {
 			switch {
 			case errors.Is(err, data.ErrRecordNotFound):
-				app.invalidAuthorizationTokenResponse(w, r)
+				app.invalidAuthenticationTokenResponse(w, r)
 			default:
 				app.serverErrorResponse(w, r, err)
 			}
